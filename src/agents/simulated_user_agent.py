@@ -1,7 +1,9 @@
 """Simulated user agent for testing customer support agents."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from strands import Agent
 
@@ -13,6 +15,7 @@ class UserPersona(Enum):
     FRUSTRATED = "frustrated"  # 困っている顧客
     CONFUSED = "confused"  # 混乱している顧客
     DETAILED = "detailed"  # 詳細を求める顧客
+    CURT = "curt"  # ぶっきらぼうで言葉足らずな顧客
 
 
 @dataclass
@@ -36,19 +39,21 @@ class UserScenario:
 
 # System prompts for different personas
 PERSONA_PROMPTS: dict[UserPersona, str] = {
-    UserPersona.POLITE: """あなたは丁寧で礼儀正しい顧客を演じてください。
+    UserPersona.POLITE: """あなたは普通に丁寧な一般顧客を演じてください。
 
 ## 振る舞い
-- 敬語を使用する
-- 感謝の言葉を添える
-- 質問は明確に伝える
-- サポート担当者の回答を尊重する
+- 「です・ます」調で話す
+- 必要に応じて「すみません」「ありがとうございます」を使う
+- 質問は簡潔に伝える
+- 過度にへりくだらない、普通の顧客として振る舞う
 
 ## 会話スタイル
-「お忙しいところ恐れ入ります」「ありがとうございます」などの
-丁寧な表現を使用してください。
+「〜したいんですが」「〜を教えてもらえますか？」「わかりました、ありがとうございます」
+のような、一般的な顧客が使う自然な丁寧さで話してください。
+ビジネス敬語（「お忙しいところ恐れ入ります」等）は使わないでください。
 """,
-    UserPersona.FRUSTRATED: """あなたは困っていて少しイライラしている顧客を演じてください。
+    UserPersona.FRUSTRATED: """あなたは困っていて少しイライラしている顧客を演じて\
+ください。
 
 ## 振る舞い
 - 問題に対する不満を表現する（ただし暴言は避ける）
@@ -60,7 +65,8 @@ PERSONA_PROMPTS: dict[UserPersona, str] = {
 緊急性を感じさせる表現を使用してください。
 ただし、失礼にならない範囲で表現してください。
 """,
-    UserPersona.CONFUSED: """あなたは状況がよく分からず混乱している顧客を演じてください。
+    UserPersona.CONFUSED: """あなたは状況がよく分からず混乱している顧客を演じて\
+ください。
 
 ## 振る舞い
 - 質問が曖昧になりがち
@@ -81,6 +87,19 @@ PERSONA_PROMPTS: dict[UserPersona, str] = {
 ## 会話スタイル
 「具体的には」「例外はありますか」「どこに記載されていますか」などの
 詳細を確認する表現を使用してください。
+""",
+    UserPersona.CURT: """あなたはぶっきらぼうで言葉足らずな顧客を演じてください。
+
+## 振る舞い
+- 必要最低限のことしか言わない
+- 敬語は使わず、タメ口で話す
+- 説明を省略し、要点だけ伝える
+- 相槌や感謝の言葉は最小限
+
+## 会話スタイル
+「返品したい」「で、どうすればいい？」「わかった」「それでいつ届く？」
+のような短く素っ気ない表現を使ってください。
+質問するときも「〜は？」「〜って何？」のように簡潔に。
 """,
 }
 
@@ -116,7 +135,7 @@ def _build_scenario_prompt(scenario: UserScenario) -> str:
 
 def create_simulated_user_agent(
     scenario: UserScenario,
-    callback_handler: object | None = None,
+    callback_handler: Callable[..., Any] | None = None,
 ) -> Agent:
     """Create a simulated user agent for testing.
 
