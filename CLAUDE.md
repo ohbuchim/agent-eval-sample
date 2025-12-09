@@ -1,10 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with code in this repository.
-
-## Project Overview
-
-Agent Eval Sample is a demonstration project that shows how to evaluate AI agents using simulated user agents. The project uses Strands Agents SDK and targets a customer support agent with knowledge base search capability.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Development Commands
 
@@ -12,23 +8,32 @@ Agent Eval Sample is a demonstration project that shows how to evaluate AI agent
 # Install dependencies
 uv sync
 
-# Install with dev dependencies
-uv sync --all-extras
-
-# Run evaluation
+# Run evaluation (all scenarios)
 uv run python -m src.main
 
 # Run specific scenario
 uv run python -m src.main --scenario return_policy
 
+# Run with custom scenarios JSON
+uv run python -m src.main --scenarios-json path/to/scenarios.json
+
 # List available scenarios
 uv run python -m src.main --list-scenarios
 
-# Format code
-uv run ruff format .
+# Show detailed conversation logs
+uv run python -m src.main --show-conversations
 
-# Lint
-uv run ruff check .
+# Generate HTML dashboard
+uv run python -m src.main --dashboard
+
+# Generate and open dashboard in browser
+uv run python -m src.main --open-dashboard
+
+# Specify output directory for dashboard
+uv run python -m src.main --dashboard --output-dir ./reports
+
+# Format and lint
+uv run ruff format .
 uv run ruff check . --fix
 
 # Type check
@@ -40,68 +45,85 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD="" uv run pytest
 
 ## Architecture
 
-```
-agent-eval-sample/
-├── src/
-│   ├── agents/
-│   │   ├── customer_support_agent.py  # Target agent (knowledge search tool)
-│   │   └── simulated_user_agent.py    # Simulated user agent
-│   ├── tools/
-│   │   └── knowledge_search.py        # Knowledge base search tool
-│   ├── evaluation/
-│   │   ├── evaluator.py               # Evaluation orchestration
-│   │   └── scenarios.py               # Test scenarios
-│   └── main.py                        # Entry point
-├── knowledge/                          # Knowledge base (Markdown files)
-│   └── sample_faq.md
-└── tests/
-```
+This project evaluates AI agents using simulated user agents with Strands Agents SDK.
+
+### Evaluation Flow
+
+1. `evaluator.py` creates a **Customer Support Agent** (target) and a **Simulated User Agent** (tester)
+2. The simulated user sends an initial query based on the scenario
+3. Agents exchange messages in a multi-turn conversation (configurable max turns)
+4. For multi-turn scenarios with `conversation_flow`, the simulated user follows hints to guide the conversation
+5. After conversation ends, responses are scored against `expected_topics` defined in each scenario
+6. Topic coverage determines the pass/fail score (>= 70% = pass)
 
 ### Key Components
 
-1. **Customer Support Agent** (`src/agents/customer_support_agent.py`)
-   - Uses Strands Agents SDK
-   - Has access to `search_knowledge_base` tool
-   - Searches markdown files for relevant information
+- **Customer Support Agent** (`src/agents/customer_support_agent.py`): Target agent that uses `@tool`-decorated `search_knowledge_base` function to answer queries
+- **Simulated User Agent** (`src/agents/simulated_user_agent.py`): Plays user personas (POLITE, FRUSTRATED, CONFUSED, DETAILED) defined in `UserPersona` enum
+- **Knowledge Search** (`src/tools/knowledge_search.py`): Parses `## ` and `### ` headers from markdown files in `knowledge/` directory
+- **Scenarios** (`src/evaluation/scenarios.py`): Loads scenarios from JSON files with support for multi-turn conversation flows
+- **Dashboard** (`src/evaluation/dashboard.py`): Generates HTML dashboard reports with conversation logs and scoring details
 
-2. **Simulated User Agent** (`src/agents/simulated_user_agent.py`)
-   - Simulates different user personas (polite, frustrated, confused, detailed)
-   - Used to test the customer support agent
+### Adding New Scenarios
 
-3. **Knowledge Search Tool** (`src/tools/knowledge_search.py`)
-   - Parses markdown files in `knowledge/` directory
-   - Simple keyword-based search
+Scenarios are now defined in JSON format. Edit `scenarios/default_scenarios.json` or create a new JSON file:
 
-4. **Evaluation Logic** (`src/evaluation/`)
-   - `scenarios.py`: Defines test scenarios with expected topics
-   - `evaluator.py`: Runs conversations and scores results
+```json
+{
+  "version": "1.0",
+  "description": "Custom evaluation scenarios",
+  "scenarios": [
+    {
+      "name": "unique_name",
+      "description": "Description",
+      "initial_query": "User's question",
+      "expected_topics": ["keyword1", "keyword2"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 3,
+      "user_context": "Optional context about user situation",
+      "user_goal": "What the user wants to achieve",
+      "conversation_flow": null
+    }
+  ]
+}
+```
 
-## Code Standards
+### Multi-turn Scenarios
 
-### Python
-- Use **uv** for package management (pip is prohibited)
-- Type hints required on all functions
-- Use `| None` instead of `Optional`
-- Google-style docstrings for public APIs
-- Ruff for formatting (88 char line length)
-- Pyright for type checking
+For complex scenarios with predefined conversation flows:
 
-### Testing
-- Framework: pytest with anyio for async tests
-- Test files: `test_*.py`
+```json
+{
+  "name": "multi_turn_example",
+  "description": "Multi-turn conversation example",
+  "initial_query": "Initial question",
+  "expected_topics": ["topic1", "topic2"],
+  "persona": "polite",
+  "max_turns": 6,
+  "user_context": "User's situation",
+  "user_goal": "User's goal",
+  "conversation_flow": [
+    {
+      "turn": 1,
+      "expected_agent_action": "What agent should do",
+      "user_response_hint": "How user should respond"
+    },
+    {
+      "turn": 2,
+      "expected_agent_action": "Next expected action",
+      "user_response_hint": null
+    }
+  ]
+}
+```
 
 ## AWS Configuration
 
-This project uses Amazon Bedrock with Claude models.
+Uses Amazon Bedrock with Claude models. Required permission: `bedrock:InvokeModel`
 
-Required AWS permissions:
-- `bedrock:InvokeModel`
-
-Configure credentials:
 ```bash
-aws configure
-# Or set environment variables:
-# AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+aws configure  # or set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 ```
 
 Default region: us-west-2

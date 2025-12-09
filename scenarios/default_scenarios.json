@@ -1,0 +1,220 @@
+{
+  "version": "1.0",
+  "description": "カスタマーサポートエージェント評価用デフォルトシナリオ",
+  "scenarios": [
+    {
+      "name": "return_policy",
+      "scenario_number": 1,
+      "description": "返品ポリシーに関する質問",
+      "initial_query": "商品を返品したいのですが、どうすればいいですか?",
+      "expected_topics": ["30日以内", "未開封・未使用", "返品送料"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 3,
+      "user_context": "購入から2週間経過、商品は未開封",
+      "user_goal": "返品手続きの方法を理解する",
+      "conversation_flow": null
+    },
+    {
+      "name": "warranty",
+      "scenario_number": 2,
+      "description": "保証期間に関する質問",
+      "initial_query": "製品の保証について教えてください",
+      "expected_topics": ["1年間", "メーカー保証", "製造上の欠陥"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 3,
+      "user_context": "",
+      "user_goal": "保証内容と期間を確認する",
+      "conversation_flow": null
+    },
+    {
+      "name": "order_cancel",
+      "scenario_number": 3,
+      "description": "注文キャンセルに関する質問",
+      "initial_query": "注文をキャンセルしたいのですが可能ですか?",
+      "expected_topics": ["発送前", "キャンセル可能", "マイページ"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 3,
+      "user_context": "注文後30分経過",
+      "user_goal": "注文をキャンセルする方法を知る",
+      "conversation_flow": null
+    },
+    {
+      "name": "delivery_time",
+      "scenario_number": 4,
+      "description": "配送時間に関する質問",
+      "initial_query": "注文してからどれくらいで届きますか?",
+      "expected_topics": ["2-5営業日", "離島", "速達配送"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 3,
+      "user_context": "",
+      "user_goal": "配送にかかる日数を確認する",
+      "conversation_flow": null
+    },
+    {
+      "name": "password_reset",
+      "scenario_number": 5,
+      "description": "パスワードリセットに関する質問",
+      "initial_query": "パスワードを忘れてしまいました",
+      "expected_topics": ["パスワードをお忘れの方", "リセットリンク", "メールアドレス"],
+      "expected_tool_use": true,
+      "persona": "confused",
+      "max_turns": 4,
+      "user_context": "メールアドレスは覚えている",
+      "user_goal": "パスワードをリセットしてログインできるようにする",
+      "conversation_flow": null
+    },
+    {
+      "name": "payment_methods",
+      "scenario_number": 6,
+      "description": "支払い方法に関する質問",
+      "initial_query": "どのような支払い方法が使えますか?",
+      "expected_topics": ["クレジットカード", "銀行振込", "コンビニ払い"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 3,
+      "user_context": "",
+      "user_goal": "利用可能な支払い方法を確認する",
+      "conversation_flow": null
+    },
+    {
+      "name": "installment",
+      "scenario_number": 7,
+      "description": "分割払いに関する質問",
+      "initial_query": "分割払いはできますか?",
+      "expected_topics": ["分割払い", "3回", "6回", "12回"],
+      "expected_tool_use": true,
+      "persona": "detailed",
+      "max_turns": 4,
+      "user_context": "高額商品を購入検討中",
+      "user_goal": "分割払いの条件と回数を確認する",
+      "conversation_flow": null
+    },
+    {
+      "name": "receipt",
+      "scenario_number": 8,
+      "description": "領収書に関する質問",
+      "initial_query": "領収書を発行してほしいのですが",
+      "expected_topics": ["マイページ", "注文履歴", "PDF"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 3,
+      "user_context": "",
+      "user_goal": "領収書の発行方法を確認する",
+      "conversation_flow": null
+    },
+    {
+      "name": "multi_turn_return_with_condition",
+      "scenario_number": 9,
+      "description": "条件確認を含む返品相談（マルチターン）",
+      "initial_query": "返品したいのですが",
+      "expected_topics": ["返品", "条件"],
+      "expected_tool_use": true,
+      "persona": "polite",
+      "max_turns": 6,
+      "user_context": "個人顧客、購入から10日経過、商品は未開封",
+      "user_goal": "返品手続きを完了する",
+      "conversation_flow": [
+        {
+          "turn": 1,
+          "expected_agent_action": "条件確認の質問",
+          "user_response_hint": "個人です。10日前に購入しました。未開封です。"
+        },
+        {
+          "turn": 2,
+          "expected_agent_action": "該当条件の返品手順説明",
+          "user_response_hint": "分かりました。具体的な手順を教えてください。"
+        },
+        {
+          "turn": 3,
+          "expected_agent_action": "詳細手順の提供",
+          "user_response_hint": null
+        }
+      ]
+    },
+    {
+      "name": "multi_turn_frustrated_delivery",
+      "scenario_number": 10,
+      "description": "配送遅延への対応（困っている顧客）",
+      "initial_query": "注文した商品がまだ届かないんですが、どうなっているんですか?",
+      "expected_topics": ["配送", "確認"],
+      "expected_tool_use": true,
+      "persona": "frustrated",
+      "max_turns": 6,
+      "user_context": "注文から1週間経過、追跡番号あり",
+      "user_goal": "配送状況を確認し、いつ届くか知る",
+      "conversation_flow": [
+        {
+          "turn": 1,
+          "expected_agent_action": "注文情報の確認依頼",
+          "user_response_hint": "注文番号は12345です。追跡番号もあります。"
+        },
+        {
+          "turn": 2,
+          "expected_agent_action": "状況説明と対応策提示",
+          "user_response_hint": "いつ届くか教えてください"
+        },
+        {
+          "turn": 3,
+          "expected_agent_action": "具体的な到着予定の説明",
+          "user_response_hint": null
+        }
+      ]
+    },
+    {
+      "name": "curt_return",
+      "scenario_number": 11,
+      "description": "返品希望（ぶっきらぼうな顧客）",
+      "initial_query": "返品したい",
+      "expected_topics": ["30日以内", "未開封・未使用", "返品送料"],
+      "expected_tool_use": true,
+      "persona": "curt",
+      "max_turns": 4,
+      "user_context": "購入から1週間、未開封",
+      "user_goal": "返品方法を知る",
+      "conversation_flow": null
+    },
+    {
+      "name": "curt_delivery",
+      "scenario_number": 12,
+      "description": "配送日確認（ぶっきらぼうな顧客）",
+      "initial_query": "届くのいつ?",
+      "expected_topics": ["2-5営業日", "配送"],
+      "expected_tool_use": true,
+      "persona": "curt",
+      "max_turns": 3,
+      "user_context": "さっき注文した",
+      "user_goal": "配送日を確認する",
+      "conversation_flow": null
+    },
+    {
+      "name": "curt_payment",
+      "scenario_number": 13,
+      "description": "支払い方法確認（ぶっきらぼうな顧客）",
+      "initial_query": "カード使える?",
+      "expected_topics": ["クレジットカード"],
+      "expected_tool_use": true,
+      "persona": "curt",
+      "max_turns": 3,
+      "user_context": "",
+      "user_goal": "クレジットカードが使えるか確認する",
+      "conversation_flow": null
+    },
+    {
+      "name": "curt_cancel",
+      "scenario_number": 14,
+      "description": "注文キャンセル（ぶっきらぼうな顧客）",
+      "initial_query": "キャンセルしたい",
+      "expected_topics": ["発送前", "キャンセル可能"],
+      "expected_tool_use": true,
+      "persona": "curt",
+      "max_turns": 3,
+      "user_context": "さっき注文したばかり",
+      "user_goal": "注文をキャンセルする",
+      "conversation_flow": null
+    }
+  ]
+}
